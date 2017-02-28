@@ -1,0 +1,11 @@
+{
+  "name": "webpush",
+  "short_name": "webpush",
+  "lang": "en-US",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#a89932",
+  "gcm_sender_id": "gcm_sender_id",
+  "gcm_user_visible_only": true,
+  "permissions": [ "gcm","storage","pushMessaging","notifications" ]
+}

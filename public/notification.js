@@ -314,19 +314,19 @@ limitations under the License.
         } );
     }
 
-    const applicationServerPublicKey = 'BDCVrr5BopWHDKp5mOItkjYrdtlycRuJ2U414FEkY7rCIZylrpqe4ybJbTCFE5QoywvJF-ZujCgNl9ktkrFAo6A';
-    const applicationServerPrivateKey = 'tnzCnlnqtF_0-4spvGYHcLJv36At0X5B_TpLLZTgzzo';
+    //const applicationServerPublicKey = 'BDCVrr5BopWHDKp5mOItkjYrdtlycRuJ2U414FEkY7rCIZylrpqe4ybJbTCFE5QoywvJF-ZujCgNl9ktkrFAo6A';
+
     if ('serviceWorker' in navigator && 'PushManager' in window) {
-    
+
         navigator.serviceWorker.register('service-worker.js')
         .then(function(registration) {
-           
+
             return navigator.serviceWorker.ready.then(function(serviceWorkerRegistration) {
-               
+                console.log( serviceWorkerRegistration );
                 return serviceWorkerRegistration.pushManager.getSubscription()
                 .then(function(subscription) {
                     // If a subscription was found, return it.
-                   
+                    console.log( subscription );
                     if (subscription) {
                         return subscription;
                     }
@@ -350,7 +350,7 @@ limitations under the License.
                 },
                 body: JSON.stringify(subscription),
             });
-            
+
         })
         .catch(function(error) {
             console.error('Service Worker Error', error);
