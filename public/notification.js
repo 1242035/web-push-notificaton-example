@@ -308,56 +308,84 @@ limitations under the License.
         }
     });
     window.Notification = Notification;
-    if( Notification.permission !== PERMISSION_GRANTED ) {
-        Notification.requestPermission().then( function( permission ) {
-            //check permission here
-        } );
+
+    function WebNotifier (options ) {
+        options = Object( options );
+        this.fetchUrl = options.fetch_url || '/notification/register';
+        this.serviceWorkerUrl = options.service_worker_url || 'service-worker.js';
+        this.start = function( callback ) {
+          if( Notification.permission !== PERMISSION_GRANTED ) {
+              Notification.requestPermission().then( function( permission ) {
+                  //check permission here
+                  if (permission === PERMISSION_GRANTED) {
+                    //const applicationServerPublicKey = 'BDCVrr5BopWHDKp5mOItkjYrdtlycRuJ2U414FEkY7rCIZylrpqe4ybJbTCFE5QoywvJF-ZujCgNl9ktkrFAo6A';
+                      this.initServiceWorker( function( error, message, subscription){
+                          return callback(error,message, subscription);
+                      } );
+                  }
+                  else {
+                      return callback(-1,"permission not allow.");
+                  }
+              } );
+          }
+          else {
+              this.initServiceWorker( function( error, message, subscription){
+                  return callback(error,message, subscription);
+              } );
+          }
+        };
+        this.initServiceWorker = function( callback ) {
+          var that = this;
+          if ('serviceWorker' in navigator && 'PushManager' in window) {
+
+              navigator.serviceWorker.register(that.serviceWorkerUrl)
+              .then(function(registration) {
+
+                  return navigator.serviceWorker.ready.then(function(serviceWorkerRegistration) {
+                      return serviceWorkerRegistration.pushManager.getSubscription()
+                      .then(function(subscription) {
+                          // If a subscription was found, return it.
+                          if (subscription) {
+                              return subscription;
+                          }
+                          // Otherwise, subscribe the user (userVisibleOnly allows to specify that we don't plan to
+                          // send browser push notifications that don't have a visible effect for the user).
+                          return serviceWorkerRegistration.pushManager.subscribe({
+                              userVisibleOnly: true,
+                              //applicationServerKey: applicationServerPublicKey
+                          });
+                      });
+                  });
+              })
+              .then(function(subscription) { //chaining the subscription promise object
+                  // Retrieve the user's public key.
+                  // Send the subscription details to the server using the Fetch API.
+                  fetch(that.fetchUrl, {
+                      method: 'post',
+                      headers: {
+                          'Content-type': 'application/json'
+                      },
+                      body: JSON.stringify(subscription),
+                  });
+                  return callback(0,'Success',subscription);
+              })
+              .catch(function(error) {
+                  return callback(error);
+              });
+          }
+          else {
+              return callback(-1,'Push messaging is not supported');
+          }
+        }
     }
 
-    //const applicationServerPublicKey = 'BDCVrr5BopWHDKp5mOItkjYrdtlycRuJ2U414FEkY7rCIZylrpqe4ybJbTCFE5QoywvJF-ZujCgNl9ktkrFAo6A';
-
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-
-        navigator.serviceWorker.register('service-worker.js')
-        .then(function(registration) {
-
-            return navigator.serviceWorker.ready.then(function(serviceWorkerRegistration) {
-                console.log( serviceWorkerRegistration );
-                return serviceWorkerRegistration.pushManager.getSubscription()
-                .then(function(subscription) {
-                    // If a subscription was found, return it.
-                    console.log( subscription );
-                    if (subscription) {
-                        return subscription;
-                    }
-                    // Otherwise, subscribe the user (userVisibleOnly allows to specify that we don't plan to
-                    // send browser push notifications that don't have a visible effect for the user).
-                    return serviceWorkerRegistration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        //applicationServerKey: applicationServerPublicKey
-                    });
-                });
-            });
-        })
-        .then(function(subscription) { //chaining the subscription promise object
-            // Retrieve the user's public key.
-            console.log( subscription );
-            // Send the subscription details to the server using the Fetch API.
-            fetch('/notification/register', {
-                method: 'post',
-                headers: {
-                    'Content-type': 'application/json'
-                },
-                body: JSON.stringify(subscription),
-            });
-
-        })
-        .catch(function(error) {
-            console.error('Service Worker Error', error);
-        });
-    }
-    else {
-        console.warn('Push messaging is not supported');
-    }
-
+    window.WebNotifier = WebNotifier;
+    
+    (new WebNotifier({
+        fetch_url:'/notification/register',
+        service_worker_url:'service-worker.js'
+    }))
+    .start( function(error, message, subscribe) {
+        console.log( error, message, subscribe );
+    } );
 })();
