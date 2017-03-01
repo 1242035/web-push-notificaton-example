@@ -1,27 +1,25 @@
+/**
+* @Author: Onemax <onemax>
+* @Date:   2017-03-01T08:49:07+07:00
+* @Email:  hotro@onemax.com.vn
+* @Project: Onemax
+* @Last modified by:   onemax
+* @Last modified time: 2017-03-01T11:04:34+07:00
+* @Copyright: Onemax.ltd.co
+*/
+
 const webpush = require('web-push');
 
-// VAPID keys should only be generated only once.
 const vapidKeys = webpush.generateVAPIDKeys();
 
-webpush.setGCMAPIKey('FCM-API-KEY');
+apiKey = process.env.FIREBASE_API_KEY || "";
+
+webpush.setGCMAPIKey(apiKey);
+
 webpush.setVapidDetails(
-  'mailto:example@gmail.com',
+  'mailto:chidungdekiemtra@gmail.com',
   vapidKeys.publicKey,
   vapidKeys.privateKey
 );
 
-// This is the same output of calling JSON.stringify on a PushSubscription
-const pushSubscription = {
-  endpoint: 'subscribe.endpoint',
-  keys:
-   { p256dh: 'subscribe.p256dh',
-     auth: 'subscribe.auth'
-   }
-};
-var notification = {
-	'title': 'this is title',
-	'body': "this is body",
-	'icon':'https://st.onemax.com.vn/img/bg/bg.png'
-};
-
-webpush.sendNotification(pushSubscription, JSON.stringify( notification) );
+module.exports = webpush;
